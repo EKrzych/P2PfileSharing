@@ -1,5 +1,6 @@
 package com.codecool;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -27,7 +28,6 @@ public class App {
             }
         } else {
             System.err.println("Try again - Command signature should look in a following way: java P2PfileSharing mode");
-            System.exit(1);
         }
     }
 
@@ -39,6 +39,12 @@ public class App {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Set directory for transfer");
         String directory = scanner.nextLine();
-        new Peer(directory, SOCKET_PORT).start();
+        try {
+            new Peer(directory, SOCKET_PORT).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

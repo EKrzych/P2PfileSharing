@@ -1,6 +1,12 @@
 package com.codecool;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +52,18 @@ public class Peer {
         return fileNames;
     }
 
-    public void start() {
+    public void start() throws IOException, InterruptedException {
+
+           Socket socket = new Socket("localhost", SOCKET_PORT);
+           DataInputStream dIn = new DataInputStream(socket.getInputStream());
+           DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+
+           dOut.write(2);
+           System.out.println("Have sent!! And got: ");
+
+           System.out.println(dIn.read());
+           socket.close();
+
 
     }
 }
