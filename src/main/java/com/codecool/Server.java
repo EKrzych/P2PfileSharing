@@ -3,6 +3,7 @@ package com.codecool;
 import java.util.List;
 
 public class Server {
+    public final static int SOCKET_PORT = 9000;
     private List<Peer> activePeers;
 
 
@@ -21,4 +22,11 @@ public class Server {
     public List<Peer> getActivePeers() {
         return activePeers;
     }
+
+    public void run() {
+
+
+    }
+
+
 }
