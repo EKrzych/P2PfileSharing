@@ -3,10 +3,10 @@ package com.codecool;
 import java.util.List;
 
 public class Peer {
-    private String folder;
+    private String directory;
 
-    public Peer(String folder) {
-        this.folder = folder;
+    public Peer(String directory) {
+        this.directory = directory;
     }
 
     public boolean getFile(String fileName, Peer fromPeer) {
