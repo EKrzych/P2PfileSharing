@@ -6,8 +6,9 @@ import java.util.Scanner;
  * Hello world!
  *
  */
-public class App 
-{
+public class App {
+    public final static int SOCKET_PORT = 9000;
+
     public static void main( String[] args ) {
         if(args.length > 0) {
             switch (args[0].toLowerCase()) {
@@ -31,13 +32,13 @@ public class App
     }
 
     private static void handleServer() {
-        new Server().run();
+        new Server(SOCKET_PORT).run();
     }
 
     private static void handlePeer() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Set directory for transfer");
         String directory = scanner.nextLine();
-        new Peer(directory).start();
+        new Peer(directory, SOCKET_PORT).start();
     }
 }

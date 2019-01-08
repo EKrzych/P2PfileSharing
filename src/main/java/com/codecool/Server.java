@@ -3,20 +3,24 @@ package com.codecool;
 import java.util.List;
 
 public class Server {
-    public final static int SOCKET_PORT = 9000;
     private List<Peer> activePeers;
+    private int SOCKET_PORT;
 
-
+    public Server(int SOCKET_PORT) {
+        this.SOCKET_PORT = SOCKET_PORT;
+    }
 
     private void checkActivePeers() {
         //TODO
     }
     public List<String> getFileNameProposition(String fileNamePart) {
         //TODO
+        return null;
     }
 
     public List<Peer> getPeerListForFile(String fileName) {
         //TODO
+        return null;
     }
 
     public List<Peer> getActivePeers() {
@@ -24,6 +28,7 @@ public class Server {
     }
 
     public void run() {
+
 
 
     }

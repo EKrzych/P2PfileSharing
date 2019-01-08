@@ -4,9 +4,11 @@ import java.util.List;
 
 public class Peer {
     private String directory;
+    private int SOCKET_PORT;
 
-    public Peer(String directory) {
+    public Peer(String directory, int SOCKET_PORT) {
         this.directory = directory;
+        this.SOCKET_PORT = SOCKET_PORT;
     }
 
     public boolean getFile(String fileName, Peer fromPeer) {
@@ -19,5 +21,9 @@ public class Peer {
 
     public List<String> getFileNamesFromFolder() {
         return null;
+    }
+
+    public void start() {
+
     }
 }
