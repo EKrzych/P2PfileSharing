@@ -46,20 +46,25 @@ public class Server {
     }
 
     private void exchangeMessage() {
-        System.out.println("In exchange message");
         try {
             while(true) {
                 List<Socket> myTempList = new ArrayList<>(this.activeSockets);
+
                 for(Socket s : myTempList) {
                     DataInputStream dIn = new DataInputStream(s.getInputStream());
                     if(dIn.available() > 0) {
-                        System.out.println("read: " + dIn.read());
+                        int message = dIn.read();
+                        System.out.println("active socket list" + this.activeSockets.size());
+                        if (message == 112) {
+                            this.activeSockets.removeIf(n->n.equals(s));
+                        } else {
+                            System.out.println("read in server: " + message);
 
-                        s.getOutputStream().write(7);
-                        System.out.println("socket: " + s.isConnected());
-                    } else if(s.isClosed()) {
+                            s.getOutputStream().write(7);
 
-                        removeUnactiveSocket();
+
+
+                        }
                     }
                 }
 
@@ -69,12 +74,12 @@ public class Server {
         }
     }
 
-    private void removeUnactiveSocket() {
-        System.out.println("in remove");
-        this.activeSockets = activeSockets.stream()
-                                            .filter(n -> !n.isClosed())
-                                            .collect(Collectors.toList());
-    }
+//    private void removeUnactiveSocket() {
+//        System.out.println("in remove");
+//        this.activeSockets = activeSockets.stream()
+//                                            .filter(n -> !n.isClosed())
+//                                            .collect(Collectors.toList());
+//    }
 
     private void handleMassage() {
         try {

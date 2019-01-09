@@ -60,9 +60,14 @@ public class Peer {
 
            dOut.write(2);
            System.out.println("Have sent!! And got: ");
-
+            dOut.flush();
            System.out.println(dIn.read());
+        dOut.write(111);
+        dOut.flush();
            socket.close();
+           dIn.close();
+           dOut.close();
+            System.out.println("socket closed>" + socket.isClosed());
 
 
     }
