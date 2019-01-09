@@ -39,12 +39,6 @@ public class App {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Set directory for transfer");
         String directory = scanner.nextLine();
-        try {
-            new Peer(directory, SOCKET_PORT).start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        new Peer(directory, SOCKET_PORT).start();
     }
 }

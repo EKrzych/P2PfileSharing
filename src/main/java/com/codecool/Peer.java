@@ -1,18 +1,21 @@
 package com.codecool;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
+import java.io.*;
 
-import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Peer {
     private String directory;
     private int SOCKET_PORT;
+    private int PEER_PORT = 3333;
+    private int myPort;
+
 
     public Peer(String directory, int SOCKET_PORT) {
         this.directory = directory;
@@ -23,9 +26,9 @@ public class Peer {
         return true;
     }
 
-    public boolean sendFile(String fileName, Peer toPeer) {
-        return true;
-    }
+//    public boolean sendFile(String fileName, Peer toPeer) {
+//        return true;
+//    }
 
 
     public List<String> getFileNamesFromFolder() {
@@ -52,22 +55,75 @@ public class Peer {
         return fileNames;
     }
 
-    public void start() throws IOException, InterruptedException {
+    public void start() {
 
-           Socket socket = new Socket("localhost", SOCKET_PORT);
-           DataInputStream dIn = new DataInputStream(socket.getInputStream());
-           DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+        try {
+            Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(), SOCKET_PORT);
+            this.myPort = socket.getInputStream().read() + 1024;
+            new Thread(() ->  {
+                downloadFile(socket);
+            }).start();
 
-           dOut.write(2);
-           System.out.println("Have sent!! And got: ");
-            dOut.flush();
-           System.out.println(dIn.read());
-        dOut.write(111);
-        dOut.flush();
-           socket.close();
-           dIn.close();
-           dOut.close();
-            System.out.println("socket closed>" + socket.isClosed());
+            new Thread(() ->  {
+                sendFile();
+            }).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void sendFile() {
+        ServerSocket serverSocket = null;
+        try {
+            System.out.println("My port" + myPort);
+            serverSocket = new ServerSocket(myPort);
+            System.out.println("waiting for connection");
+            Socket socket = serverSocket.accept();//jeden watek ktory skceptuje peery i drugi ktory przesyla wiadomosci
+            System.out.println("get host name" + socket.getInetAddress().getHostName());
+            System.out.println("asked for file: " + socket.getInputStream().read());
+            socket.getOutputStream().write(10);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void downloadFile(Socket socket) {
+        System.out.println("in download in client");
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Download files? yes?");
+        if(sc.nextLine().equals("yes")) {
+            try {
+
+                System.out.println("socket get adres: " + socket.getInetAddress().getHostAddress() );
+                DataOutputStream dOut =  new DataOutputStream(socket.getOutputStream());
+                System.out.println("before writting 2");
+                dOut.write(2);
+                System.out.println("Have sent!!");
+              //  dOut.flush();
+                DataInputStream dIn = new DataInputStream(socket.getInputStream());
+//                while(dIn.available() == -1) {
+//                    wait(200);
+//                }
+                System.out.println("___________________________");
+                int peerPort = dIn.read();
+                peerPort += 1024;
+                System.out.println("Read peer address: " + peerPort);
+                System.out.println("Our End!!!!!!");
+
+                Socket socketToGetFile = new Socket(InetAddress.getLocalHost().getHostAddress(), peerPort);
+                socketToGetFile.getOutputStream().write(2);
+                System.out.println("Got file: " + socketToGetFile.getInputStream().read());
+
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
 
 
     }
