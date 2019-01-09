@@ -75,7 +75,6 @@ public class Peer {
     }
 
     private void sendFile() {
-        ServerSocket serverSocket = null;
         try {
             System.out.println("My port" + myPort);
             serverSocket = new ServerSocket(myPort);
@@ -103,12 +102,10 @@ public class Peer {
                 dOut.write(2);
                 System.out.println("Have sent!!");
               //  dOut.flush();
-                DataInputStream dIn = new DataInputStream(socket.getInputStream());
-//                while(dIn.available() == -1) {
-//                    wait(200);
-//                }
+                ObjectInputStream oIn = new ObjectInputStream(socket.getInputStream());
+
                 System.out.println("___________________________");
-                int peerPort = dIn.read();
+                int peerPort = (Integer) oIn.readObject();
                 peerPort += 1024;
                 System.out.println("Read peer address: " + peerPort);
                 System.out.println("Our End!!!!!!");
@@ -119,7 +116,7 @@ public class Peer {
 
 
 
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }

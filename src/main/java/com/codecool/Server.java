@@ -48,12 +48,12 @@ public class Server {
     private void exchangeMessage() {
         try {
             while(true) {
-                List<Socket> myTempList = this.activeSockets.keySet().stream().collect(Collectors.toList());
+                List<Socket> myTempList = new ArrayList<>(this.activeSockets.keySet());
 
                 for(Socket s : myTempList) {
                     DataInputStream dIn = new DataInputStream(s.getInputStream());
 
-                    if(dIn.available() > -1) {
+                    if(dIn.available() > 0) {
                         int message = dIn.read();
                         System.out.println("active socket list" + this.activeSockets.size());
                         if (message == 112) {
@@ -61,9 +61,9 @@ public class Server {
                         } else {
                             System.out.println("read in server: " + message);
                             ObjectOutputStream oOut = new ObjectOutputStream(s.getOutputStream());
-                            System.out.println("Port that should be sent: " + activeSockets.get(myTempList.get(0)));
-                            oOut.writeObject(activeSockets.get(myTempList.get(0)));
-
+                            System.out.println("Port that should be sent: " + 10);
+                            oOut.writeObject(10);
+                            System.out.println("Port send");
                         }
                     }
                 }
@@ -89,8 +89,8 @@ public class Server {
                 System.out.println("waiting for connection");
                 Socket socket = serverSocket.accept();//jeden watek ktory skceptuje peery i drugi ktory przesyla wiadomosci
                 System.out.println("get host name" + socket.getInetAddress().getHostName());
-                activeSockets.put(socket, starter++);
-                socket.getOutputStream().write(starter);
+                activeSockets.put(socket, starter);
+                socket.getOutputStream().write(starter++);
 
                 System.out.println("Socket added");
 
