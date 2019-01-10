@@ -11,15 +11,40 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Peer {
-    private String directory;
-    private int SOCKET_PORT;
-    private int PEER_PORT = 3333;
-    private int myPort;
+    private Integer myPort;
+    private Socket server;
+
+    public Peer(int portToConnect) {
+       connectIfPossible(portToConnect);
+       setUpServer();
+    }
+
+    private void setUpServer() {
+        try {
+            ServerSocket serverSocket = new ServerSocket(0);
+            myPort = serverSocket.getLocalPort();
+            System.out.println("You are server on port" + myPort);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void connectIfPossible(int portToConnect) {
+        try {
+            this.server = new Socket(InetAddress.getLocalHost().getHostAddress(), portToConnect);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+           ObjectOutputStream os = new ObjectOutputStream(server.getOutputStream());
+           os.writeObject("Let's connect!");
+            System.out.println("You have connected!!");
+        } catch (IOException e) {
+            System.out.println("There is no such port - you are the first one.");
+            e.printStackTrace();
+        }
 
 
-    public Peer(String directory, int SOCKET_PORT) {
-        this.directory = directory;
-        this.SOCKET_PORT = SOCKET_PORT;
     }
 
     public boolean getFile(String fileName, Peer fromPeer) {
@@ -31,9 +56,9 @@ public class Peer {
 //    }
 
 
-    public List<String> getFileNamesFromFolder() {
-        return getFileNamesFromFolder(directory);
-    }
+//    public List<String> getFileNamesFromFolder() {
+//        return getFileNamesFromFolder(directory);
+//    }
 
     private List<String> getFileNamesFromFolder(String folder) {
         List<String> fileNames = new ArrayList<>();
@@ -55,24 +80,21 @@ public class Peer {
         return fileNames;
     }
 
-    public void start() {
-
-        try {
-            Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(), SOCKET_PORT);
-            this.myPort = socket.getInputStream().read() + 1024;
-            new Thread(() ->  {
-                downloadFile(socket);
-            }).start();
-
-            new Thread(() ->  {
-                sendFile();
-            }).start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//    public void start() {
+//        try {
+//            new Thread(() ->  {
+//               // downloadFile();
+//            }).start();
+//
+//            new Thread(() ->  {
+//                sendFile();
+//            }).start();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
 
-    }
+  //  }
 
     private void sendFile() {
         try {

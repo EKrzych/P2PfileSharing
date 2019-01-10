@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Server {
-    private Map<String,Peer> activePeers;
+    private Map<Integer,Peer> activePeers;
     private Map<Socket, Integer> activeSockets = new Hashtable<>();
     private int SOCKET_PORT;
 
