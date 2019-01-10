@@ -6,45 +6,49 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Peer {
-    private Integer myPort;
-    private Socket server;
+
+    private Set<Integer> serverPorts = new HashSet<>();
+    private String hostIP = "localhost";
+    private ServerSocket serverSocket;
 
     public Peer(int portToConnect) {
-       connectIfPossible(portToConnect);
-       setUpServer();
+        setUpServer();
+        connectIfPossible(portToConnect);
     }
 
     private void setUpServer() {
         try {
-            ServerSocket serverSocket = new ServerSocket(0);
-            myPort = serverSocket.getLocalPort();
+            this.serverSocket = new ServerSocket(0);
+            int myPort = serverSocket.getLocalPort();
             System.out.println("You are server on port" + myPort);
+            serverPorts.add(myPort);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private void connectIfPossible(int portToConnect) {
+        Socket server;
         try {
-            this.server = new Socket(InetAddress.getLocalHost().getHostAddress(), portToConnect);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-           ObjectOutputStream os = new ObjectOutputStream(server.getOutputStream());
-           os.writeObject("Let's connect!");
+            server = new Socket(hostIP, portToConnect);
+            ObjectOutputStream oOs = new ObjectOutputStream(server.getOutputStream());
+            ObjectInputStream oIs = new ObjectInputStream(server.getInputStream());
+            oOs.writeObject("newPort");
+            oOs.writeObject(serverSocket.getLocalPort());
+            serverPorts.add(portToConnect);
+            serverPorts.addAll((Set<Integer>)oIs.readObject());
+            System.out.println("our port List: ");
+            serverPorts.stream().forEach(n -> System.out.println(n));
             System.out.println("You have connected!!");
         } catch (IOException e) {
             System.out.println("There is no such port - you are the first one.");
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
-
-
     }
 
     public boolean getFile(String fileName, Peer fromPeer) {
@@ -80,47 +84,65 @@ public class Peer {
         return fileNames;
     }
 
-//    public void start() {
-//        try {
-//            new Thread(() ->  {
-//               // downloadFile();
-//            }).start();
+    public void start() {
+        new Thread(() ->  {
+           welcomeNewPeers();
+        }).start();
 //
-//            new Thread(() ->  {
-//                sendFile();
-//            }).start();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+//        new Thread(() ->  {
+//            sendFile();
+//        }).start();
 
 
-  //  }
+    }
 
-    private void sendFile() {
-        try {
-            System.out.println("My port" + myPort);
-            ServerSocket serverSocket = new ServerSocket(myPort);
-            while (true) {
-                System.out.println("waiting for connection");
-                Socket socket = serverSocket.accept();//jeden watek ktory skceptuje peery i drugi ktory przesyla wiadomosci
-                System.out.println("get host name" + socket.getInetAddress().getHostName());
-                System.out.println("asked for file: " + socket.getInputStream().read());
-                socket.getOutputStream().write(10);
+    private void welcomeNewPeers() {
+        while(true) {
+            try {
+                Socket socket = serverSocket.accept();
+                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
+                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
+
+                String message = (String) oIs.readObject();
+                if(message.equals("newPort")) {
+                    serverPorts.add((Integer) oIs.readObject());
+                    oOs.writeObject(serverPorts);
+                }
+                socket.close();
+                oIs.close();
+                oOs.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
     }
 
+//    private void sendFile() {
+//        try {
+//            System.out.println("My port" + myPort);
+//            ServerSocket serverSocket = new ServerSocket(myPort);
+//            while (true) {
+//                System.out.println("waiting for connection");
+//                Socket socket = serverSocket.accept();//jeden watek ktory skceptuje peery i drugi ktory przesyla wiadomosci
+//                System.out.println("get host name" + socket.getInetAddress().getHostName());
+//                System.out.println("asked for file: " + socket.getInputStream().read());
+//                socket.getOutputStream().write(10);
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
+
     public void downloadFile(Socket socket) {
-        System.out.println("in download in client");
         Scanner sc = new Scanner(System.in);
         System.out.println("Download files? yes?");
         if(sc.nextLine().equals("yes")) {
             try {
-
-                System.out.println("socket get adres: " + socket.getInetAddress().getHostAddress() );
                 DataOutputStream dOut =  new DataOutputStream(socket.getOutputStream());
                 System.out.println("before writting 2");
                 dOut.write(2);
