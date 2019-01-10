@@ -77,12 +77,14 @@ public class Peer {
     private void sendFile() {
         try {
             System.out.println("My port" + myPort);
-            serverSocket = new ServerSocket(myPort);
-            System.out.println("waiting for connection");
-            Socket socket = serverSocket.accept();//jeden watek ktory skceptuje peery i drugi ktory przesyla wiadomosci
-            System.out.println("get host name" + socket.getInetAddress().getHostName());
-            System.out.println("asked for file: " + socket.getInputStream().read());
-            socket.getOutputStream().write(10);
+            ServerSocket serverSocket = new ServerSocket(myPort);
+            while (true) {
+                System.out.println("waiting for connection");
+                Socket socket = serverSocket.accept();//jeden watek ktory skceptuje peery i drugi ktory przesyla wiadomosci
+                System.out.println("get host name" + socket.getInetAddress().getHostName());
+                System.out.println("asked for file: " + socket.getInputStream().read());
+                socket.getOutputStream().write(10);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
