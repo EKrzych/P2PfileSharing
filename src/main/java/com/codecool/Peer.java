@@ -17,7 +17,7 @@ public class Peer {
     public Peer(int portToConnect) {
         setUpServer();
         connectIfPossible(portToConnect);
-        downloadFiles();
+
     }
 
     private void downloadFiles() {
@@ -48,6 +48,9 @@ public class Peer {
                 } else if(message.equals("list with already checked ports")){
                     checkedPorts = (Set<Integer>) oIs.readObject();
                 }
+                socket.close();
+                oOs.close();
+                oIs.close();
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
@@ -125,16 +128,14 @@ public class Peer {
 //    }
 
     public void start() {
-        new Thread(() ->  {
-           welcomeNewPeers();
-        }).start();
-//
-//        new Thread(() ->  {
-//            sendFile();
-//        }).start();
+        new Thread(this::welcomeNewPeers).start();
+
+        new Thread(this::downloadFiles).start();
 
 
     }
+
+
 
     private void welcomeNewPeers() {
         while(true) {
