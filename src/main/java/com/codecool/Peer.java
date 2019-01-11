@@ -17,6 +17,44 @@ public class Peer {
     public Peer(int portToConnect) {
         setUpServer();
         connectIfPossible(portToConnect);
+        downloadFiles();
+    }
+
+    private void downloadFiles() {
+        String fileName;
+        Scanner sc = new Scanner(System.in);
+        while(true) {
+            System.out.println("What file would you download?");
+            fileName = sc.nextLine();
+            int portToConnect = findPortToConnect(fileName);
+        }
+    }
+
+    private int findPortToConnect(String fileName) {
+        Set<Integer> checkedPorts = new HashSet<>();
+
+        for(Integer i : serverPorts) {
+            try {
+                Socket socket = new Socket(hostIP, i);
+                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
+                oOs.writeObject("looking for file");
+                oOs.writeObject(fileName);
+                oOs.writeObject("set with already checked ports");
+                oOs.writeObject(checkedPorts);
+                String message = (String) oIs.readObject();
+                if(message.equals("found port")) {
+                    return (Integer) oIs.readObject();
+                } else if(message.equals("list with already checked ports")){
+                    checkedPorts = (Set<Integer>) oIs.readObject();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return 0;
     }
 
     private void setUpServer() {
@@ -41,11 +79,13 @@ public class Peer {
             serverPorts.add(portToConnect);
             serverPorts.addAll((Set<Integer>)oIs.readObject());
             System.out.println("our port List: ");
-            serverPorts.stream().forEach(n -> System.out.println(n));
+
+            serverPorts.forEach(System.out::println);
+
             System.out.println("You have connected!!");
+
         } catch (IOException e) {
             System.out.println("There is no such port - you are the first one.");
-            e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -64,25 +104,25 @@ public class Peer {
 //        return getFileNamesFromFolder(directory);
 //    }
 
-    private List<String> getFileNamesFromFolder(String folder) {
-        List<String> fileNames = new ArrayList<>();
-
-        File folderFile = new File(folder);
-        File[] listOfFiles = folderFile.listFiles();
-
-        if (listOfFiles == null) {
-            return fileNames;
-        }
-
-        for (File file : listOfFiles) {
-            if (file.isFile()) {
-                fileNames.add(file.getName());
-            } else if (file.isDirectory()) {
-                fileNames.addAll(getFileNamesFromFolder(file.getName()));
-            }
-        }
-        return fileNames;
-    }
+//    private List<String> getFileNamesFromFolder(String folder) {
+//        List<String> fileNames = new ArrayList<>();
+//
+//        File folderFile = new File(folder);
+//        File[] listOfFiles = folderFile.listFiles();
+//
+//        if (listOfFiles == null) {
+//            return fileNames;
+//        }
+//
+//        for (File file : listOfFiles) {
+//            if (file.isFile()) {
+//                fileNames.add(file.getName());
+//            } else if (file.isDirectory()) {
+//                fileNames.addAll(getFileNamesFromFolder(file.getName()));
+//            }
+//        }
+//        return fileNames;
+//    }
 
     public void start() {
         new Thread(() ->  {
@@ -138,36 +178,36 @@ public class Peer {
 //
 //    }
 
-    public void downloadFile(Socket socket) {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Download files? yes?");
-        if(sc.nextLine().equals("yes")) {
-            try {
-                DataOutputStream dOut =  new DataOutputStream(socket.getOutputStream());
-                System.out.println("before writting 2");
-                dOut.write(2);
-                System.out.println("Have sent!!");
-              //  dOut.flush();
-                ObjectInputStream oIn = new ObjectInputStream(socket.getInputStream());
+//    public void downloadFile(Socket socket) {
+//        Scanner sc = new Scanner(System.in);
+//        System.out.println("Download files? yes?");
+//        if(sc.nextLine().equals("yes")) {
+//            try {
+//                DataOutputStream dOut =  new DataOutputStream(socket.getOutputStream());
+//                System.out.println("before writting 2");
+//                dOut.write(2);
+//                System.out.println("Have sent!!");
+//              //  dOut.flush();
+//                ObjectInputStream oIn = new ObjectInputStream(socket.getInputStream());
+//
+//                System.out.println("___________________________");
+//                int peerPort = (Integer) oIn.readObject();
+//                peerPort += 1024;
+//                System.out.println("Read peer address: " + peerPort);
+//                System.out.println("Our End!!!!!!");
+//
+//                Socket socketToGetFile = new Socket(InetAddress.getLocalHost().getHostAddress(), peerPort);
+//                socketToGetFile.getOutputStream().write(2);
+//                System.out.println("Got file: " + socketToGetFile.getInputStream().read());
 
-                System.out.println("___________________________");
-                int peerPort = (Integer) oIn.readObject();
-                peerPort += 1024;
-                System.out.println("Read peer address: " + peerPort);
-                System.out.println("Our End!!!!!!");
-
-                Socket socketToGetFile = new Socket(InetAddress.getLocalHost().getHostAddress(), peerPort);
-                socketToGetFile.getOutputStream().write(2);
-                System.out.println("Got file: " + socketToGetFile.getInputStream().read());
-
-
-
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-
-    }
+//
+//
+//            } catch (IOException | ClassNotFoundException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//
+//
+//    }
 }
