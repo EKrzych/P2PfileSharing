@@ -18,8 +18,11 @@ public class App {
 
     private static void handlePeer() {
         Scanner scanner = new Scanner(System.in);
+        System.out.println("Set path for directory to exchange");
+        String path = scanner.nextLine();
         System.out.println("Set port for connection");
         Integer portToConnect = scanner.nextInt();
-        new Peer(portToConnect).start();
+
+        new Peer(portToConnect, path).start();
     }
 }

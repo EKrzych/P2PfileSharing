@@ -2,62 +2,30 @@ package com.codecool;
 
 import java.io.*;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Peer {
 
     private Set<Integer> serverPorts = new HashSet<>();
     private String hostIP = "localhost";
     private ServerSocket serverSocket;
+    private String pathToFolder;
 
-    public Peer(int portToConnect) {
+    public Peer(int portToConnect, String path) {
+        this.pathToFolder = path;
         setUpServer();
         connectIfPossible(portToConnect);
 
     }
 
-    private void downloadFiles() {
-        String fileName;
-        Scanner sc = new Scanner(System.in);
-        while(true) {
-            System.out.println("What file would you download?");
-            fileName = sc.nextLine();
-            int portToConnect = findPortToConnect(fileName);
-        }
-    }
+    public void start() {
+        new Thread(this::communicate).start();
 
-    private int findPortToConnect(String fileName) {
-        Set<Integer> checkedPorts = new HashSet<>();
-
-        for(Integer i : serverPorts) {
-            try {
-                Socket socket = new Socket(hostIP, i);
-                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
-                oOs.writeObject("looking for file");
-                oOs.writeObject(fileName);
-                oOs.writeObject("set with already checked ports");
-                oOs.writeObject(checkedPorts);
-                String message = (String) oIs.readObject();
-                if(message.equals("found port")) {
-                    return (Integer) oIs.readObject();
-                } else if(message.equals("list with already checked ports")){
-                    checkedPorts = (Set<Integer>) oIs.readObject();
-                }
-                socket.close();
-                oOs.close();
-                oIs.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-        return 0;
+        new Thread(this::downloadFiles).start();
     }
 
     private void setUpServer() {
@@ -94,6 +62,128 @@ public class Peer {
         }
     }
 
+    private void communicate() {
+        while(true) {
+            try {
+                Socket socket = serverSocket.accept();
+
+                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
+                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
+                String message = (String) oIs.readObject();
+
+                if(message.equals("newPort")) {
+                    welcomeNewPeers(oIs, oOs);
+                } else if(message.equals("looking for file")) {
+                    lookForPortWithFile(oIs, oOs);
+                }
+                socket.close();
+                oIs.close();
+                oOs.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void welcomeNewPeers(ObjectInputStream oIs, ObjectOutputStream oOs) {
+        try {
+            serverPorts.add((Integer) oIs.readObject());
+            oOs.writeObject(serverPorts);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void lookForPortWithFile(ObjectInputStream oIs, ObjectOutputStream oOs) {
+        try {
+            String fileName = (String) oIs.readObject();
+            String message = (String) oIs.readObject();
+            if(message.equals("list with already checked ports")) {
+                Set<Integer> checkedPortsFromAnotherPeer = (Set<Integer>) oIs.readObject();
+                if(checkIfHaveFile(fileName)) {
+                    oOs.writeObject("found port");
+                    oOs.writeObject(serverSocket.getLocalPort());
+                } else {
+                    checkedPortsFromAnotherPeer.add(serverSocket.getLocalPort());
+                    int portToConnect = findPortToConnect(fileName, checkedPortsFromAnotherPeer);
+                    if(portToConnect > 0) {
+                        oOs.writeObject("found port");
+                        oOs.writeObject(portToConnect);
+                    } else {
+                        oOs.writeObject("list with already checked ports");
+                        oOs.writeObject(checkedPortsFromAnotherPeer);
+                    }
+
+                }
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void downloadFiles() {
+        String fileName;
+        Scanner sc = new Scanner(System.in);
+        while(true) {
+            System.out.println("What file would you download?");
+            fileName = sc.nextLine();
+            int portToConnect = findPortToConnect(fileName);
+            System.out.println("Port to connect" + portToConnect);
+        }
+    }
+
+    private int findPortToConnect(String fileName, Set<Integer> checkedPorts ) {
+        Set<Integer> finalCheckedPorts = checkedPorts;
+        Set<Integer> portsToCheck = serverPorts.stream()
+                                                .filter(n->!finalCheckedPorts.contains(n))
+                                                .collect(Collectors.toSet());
+        for(Integer port : portsToCheck) {
+            try {
+                Socket socket = new Socket(hostIP, port);
+                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
+                oOs.writeObject("looking for file");
+                oOs.writeObject(fileName);
+                oOs.writeObject("list with already checked ports");
+                oOs.writeObject(checkedPorts);
+                String message = (String) oIs.readObject();
+                if(message.equals("found port")) {
+                    return (Integer) oIs.readObject();
+                } else if(message.equals("list with already checked ports")){
+                    checkedPorts = (Set<Integer>) oIs.readObject();
+                } else if(message.equals("port not found")){
+
+                }
+                socket.close();
+                oOs.close();
+                oIs.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return 0;
+        //////co sie dzieje jak peer przesyla dalej i komu zwraca zero.
+        // jesli zaden z moich znajomych nie ma ma zapytac swoich znajomyc.
+        //
+        // pomysl 1; posredniczenie i port wraca przez wszystkich posrednikow.
+        // pomysl2 idzie port osoby ktora pyta z zapytaniem
+        // 3pomysl : mowi ze nie ma i odsyla liste portow ktora mozna sprawdzac
+    }
+
+    private int findPortToConnect(String fileName) {
+        return findPortToConnect(fileName, new HashSet<Integer>());
+    }
+
+
+
     public boolean getFile(String fileName, Peer fromPeer) {
         return true;
     }
@@ -107,59 +197,28 @@ public class Peer {
 //        return getFileNamesFromFolder(directory);
 //    }
 
-//    private List<String> getFileNamesFromFolder(String folder) {
-//        List<String> fileNames = new ArrayList<>();
-//
-//        File folderFile = new File(folder);
-//        File[] listOfFiles = folderFile.listFiles();
-//
-//        if (listOfFiles == null) {
-//            return fileNames;
-//        }
-//
-//        for (File file : listOfFiles) {
-//            if (file.isFile()) {
-//                fileNames.add(file.getName());
-//            } else if (file.isDirectory()) {
-//                fileNames.addAll(getFileNamesFromFolder(file.getName()));
-//            }
-//        }
-//        return fileNames;
-//    }
+    private List<String> getFileNamesFromFolder(String folder) {
+        List<String> fileNames = new ArrayList<>();
 
-    public void start() {
-        new Thread(this::welcomeNewPeers).start();
+        File folderFile = new File(folder);
+        File[] listOfFiles = folderFile.listFiles();
 
-        new Thread(this::downloadFiles).start();
-
-
-    }
-
-
-
-    private void welcomeNewPeers() {
-        while(true) {
-            try {
-                Socket socket = serverSocket.accept();
-                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
-
-                String message = (String) oIs.readObject();
-                if(message.equals("newPort")) {
-                    serverPorts.add((Integer) oIs.readObject());
-                    oOs.writeObject(serverPorts);
-                }
-                socket.close();
-                oIs.close();
-                oOs.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+        if (listOfFiles == null) {
+            return fileNames;
         }
 
+        for (File file : listOfFiles) {
+            if (file.isFile()) {
+                fileNames.add(file.getName());
+            } else if (file.isDirectory()) {
+                fileNames.addAll(getFileNamesFromFolder(file.getAbsolutePath()));
+            }
+        }
+        return fileNames;
+    }
+
+    private boolean checkIfHaveFile(String fileName) {
+        return getFileNamesFromFolder(pathToFolder).contains(fileName);
     }
 
 //    private void sendFile() {
