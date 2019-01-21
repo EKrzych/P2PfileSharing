@@ -64,11 +64,9 @@ public class Peer {
 
     private void communicate() {
         while(true) {
-            try {
-                Socket socket = serverSocket.accept();
-
+            try (Socket socket = serverSocket.accept();
                 ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
+                ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream())) {
                 String message = (String) oIs.readObject();
 
                 if(message.equals("newPort")) {
@@ -76,13 +74,7 @@ public class Peer {
                 } else if(message.equals("looking for file")) {
                     lookForPortWithFile(oIs, oOs);
                 }
-                socket.close();
-                oIs.close();
-                oOs.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
@@ -146,10 +138,10 @@ public class Peer {
         Iterator<Integer> it = portsToCheck.iterator();
 
         if(it.hasNext()) {
-            try {
-                Socket socket = new Socket(hostIP, it.next());
+            try (Socket socket = new Socket(hostIP, it.next());
                 ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
+                ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream())) {
+
                 oOs.writeObject("looking for file");
                 oOs.writeObject(fileName);
                 oOs.writeObject("list with already checked ports");
@@ -157,9 +149,13 @@ public class Peer {
                 String message = (String) oIs.readObject();
 
                 if(message.equals("found port")) {
-                    return (Integer) oIs.readObject();
+                    Integer foundPort = (Integer) oIs.readObject();
+                    System.out.println("Found port" + foundPort + "I've found it: " + socket.getPort());
+                    return foundPort;
                 } else if(message.equals("list with already checked ports")){
                     Set<Integer> actualizedPorts = (Set<Integer>) oIs.readObject();
+                    System.out.println("actualized set: ");
+                    actualizedPorts.forEach(n->System.out.println(n));
                     int foundPort = findPortToConnect(fileName, actualizedPorts);
                     if(foundPort > 0) {
                         return foundPort;
@@ -167,10 +163,6 @@ public class Peer {
                         return findPortToConnect(fileName, actualizedPorts);
                     }
                 }
-
-                socket.close();
-                oOs.close();
-                oIs.close();
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -179,7 +171,7 @@ public class Peer {
     }
 
     private int findPortToConnect(String fileName) {
-        return findPortToConnect(fileName, new HashSet<Integer>());
+        return findPortToConnect(fileName, new LinkedHashSet<>());
     }
 
 
