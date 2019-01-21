@@ -143,9 +143,11 @@ public class Peer {
         Set<Integer> portsToCheck = serverPorts.stream()
                                                 .filter(n->!finalCheckedPorts.contains(n))
                                                 .collect(Collectors.toSet());
-        for(Integer port : portsToCheck) {
+        Iterator<Integer> it = portsToCheck.iterator();
+
+        if(it.hasNext()) {
             try {
-                Socket socket = new Socket(hostIP, port);
+                Socket socket = new Socket(hostIP, it.next());
                 ObjectOutputStream oOs = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream oIs = new ObjectInputStream(socket.getInputStream());
                 oOs.writeObject("looking for file");
@@ -153,29 +155,27 @@ public class Peer {
                 oOs.writeObject("list with already checked ports");
                 oOs.writeObject(checkedPorts);
                 String message = (String) oIs.readObject();
+
                 if(message.equals("found port")) {
                     return (Integer) oIs.readObject();
                 } else if(message.equals("list with already checked ports")){
-                    checkedPorts = (Set<Integer>) oIs.readObject();
-                } else if(message.equals("port not found")){
-
+                    Set<Integer> actualizedPorts = (Set<Integer>) oIs.readObject();
+                    int foundPort = findPortToConnect(fileName, actualizedPorts);
+                    if(foundPort > 0) {
+                        return foundPort;
+                    } else if(portsToCheck.size() > 1){
+                        return findPortToConnect(fileName, actualizedPorts);
+                    }
                 }
+
                 socket.close();
                 oOs.close();
                 oIs.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
         return 0;
-        //////co sie dzieje jak peer przesyla dalej i komu zwraca zero.
-        // jesli zaden z moich znajomych nie ma ma zapytac swoich znajomyc.
-        //
-        // pomysl 1; posredniczenie i port wraca przez wszystkich posrednikow.
-        // pomysl2 idzie port osoby ktora pyta z zapytaniem
-        // 3pomysl : mowi ze nie ma i odsyla liste portow ktora mozna sprawdzac
     }
 
     private int findPortToConnect(String fileName) {
