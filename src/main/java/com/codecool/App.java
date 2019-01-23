@@ -1,28 +1,18 @@
 package com.codecool;
 
-import java.io.IOException;
-import java.util.Scanner;
-
-/**
- * Hello world!
- *
- */
 public class App {
 
 
     public static void main( String[] args ) {
-
-        handlePeer();
+        start(new PeerCreator().get());
 
     }
 
-    private static void handlePeer() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Set path for directory to exchange");
-        String path = scanner.nextLine();
-        System.out.println("Set port for connection");
-        Integer portToConnect = scanner.nextInt();
+    private static void start(Peer peer) {
+        Finder finder = new Finder(peer);
 
-        new Peer(portToConnect, path).start();
+        new Thread(new ClientPart(new Downloader(finder))).start();
+        new Thread(new ServerPart(finder)).start();
     }
+
 }
