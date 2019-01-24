@@ -70,7 +70,8 @@ public class Communicator {
                 e.printStackTrace();
             }
         }
-        return "couldn't get message"; // TODO handle this message
+
+        return "coudnt send peer";//todo
     }
 
     public Peer readPeer() {

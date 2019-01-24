@@ -9,6 +9,9 @@ public class Downloader {
 
     public void downloadFile(String fileName) {
         Peer peerWithFile = finder.findPeerToConnect(fileName);
+        if(peerWithFile != null) {
+            System.out.println("I found file in peer with port: " + peerWithFile.getPort());
+        }
         //TODO download file
     }
 

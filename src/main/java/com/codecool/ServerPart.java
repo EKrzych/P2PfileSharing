@@ -46,8 +46,7 @@ public class ServerPart implements Runnable {
 
     private void welcomeNewPeer(Communicator communicator) {
         Set<Peer> friends = finder.getPeer().getFriends();
-        Peer peer = communicator.readPeer();
-        friends.add(peer);
+        friends.add(communicator.readPeer());
         communicator.sendPeers(friends);
     }
 

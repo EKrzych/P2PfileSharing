@@ -37,7 +37,7 @@ public class ClientPart implements Runnable {
 
     private Integer askForPort() {
         System.out.println("Set port for connection");
-        return scanner.nextInt();
+        return Integer.valueOf(scanner.nextLine());
     }
 
     private String askForHostIp() {

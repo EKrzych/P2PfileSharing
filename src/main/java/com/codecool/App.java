@@ -38,7 +38,9 @@ public class App {
 
         String path = askForDirectory();
 
-        return new Peer(new HashSet<>(), path, serverSocket.getLocalPort(), serverSocket.getInetAddress().getHostAddress());
+        Peer peer = new Peer(new HashSet<>(), path, serverSocket.getLocalPort(), serverSocket.getInetAddress().getHostAddress());
+        peer.getFriends().add(peer);
+        return  peer;
     }
 
     private String askForDirectory() {

@@ -1,6 +1,7 @@
 package com.codecool;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 
 public class Peer implements Serializable {
@@ -38,7 +39,21 @@ public class Peer implements Serializable {
         return true;
     }
 
-//    public boolean sendFile(String fileName, Peer toPeer) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Peer peer = (Peer) o;
+        return Objects.equals(port, peer.port);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(port);
+    }
+
+    //    public boolean sendFile(String fileName, Peer toPeer) {
 //        return true;
 //    }
 

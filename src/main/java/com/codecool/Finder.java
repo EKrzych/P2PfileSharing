@@ -12,7 +12,9 @@ public class Finder {
     }
 
     Peer findPeerToConnect(String fileName) {
-        return findPeerToConnect(fileName, new LinkedHashSet<>());
+        HashSet<Peer> peers = new LinkedHashSet<Peer>();
+        peers.add(peer);
+        return findPeerToConnect(fileName, peers );
     }
 
 
@@ -20,12 +22,11 @@ public class Finder {
         Iterator<Peer> it = getIteratorWithPortsToCheck(checkedPeers);
 
         if(it.hasNext()) {
-            Communicator communicator = new Communicator(peer);
+            Communicator communicator = new Communicator(it.next());
             String message = communicator.askForFile(fileName, checkedPeers);
-
+            System.out.println();
             if(message.equals("found peer")) {
                 Peer foundPeer = communicator.readPeer();
-                System.out.println("Found port" + foundPeer + "I've found it: " + communicator.getSocket().getPort());
                 communicator.close();
                 return foundPeer;
             } else if(message.equals("list with already checked peers")){
@@ -35,6 +36,7 @@ public class Finder {
             }
             communicator.close();
         }
+        System.out.println("Did't find file");
         return null;
     }
 
@@ -60,7 +62,7 @@ public class Finder {
                     System.out.println("Found peer - before writing to outputstream: " + peerToConnect);
                     communicator.sendPeer(peerToConnect);
 
-                } else {
+                } else {//TODO check complicated net
                     System.out.println("list with already checked ports - before writting into outputstream: ");
                     checkedPeersFromAnotherPeer.forEach(n -> System.out.println(n));
                     communicator.sendAlreadyCheckedPeers(checkedPeersFromAnotherPeer);
