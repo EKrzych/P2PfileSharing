@@ -23,13 +23,13 @@ public class Finder {
 
         if(it.hasNext()) {
             Communicator communicator = new Communicator(it.next());
-            String message = communicator.askForFile(fileName, checkedPeers);
+            Message message = communicator.askForFile(fileName, checkedPeers);
             System.out.println();
-            if(message.equals("found peer")) {
+            if(message.equals(Message.PEER)) {
                 Peer foundPeer = communicator.readPeer();
                 communicator.close();
                 return foundPeer;
-            } else if(message.equals("list with already checked peers")){
+            } else if(message.equals(Message.PEERS)){
                 Set<Peer> actualizedPeers = communicator.readPeers();
                 communicator.close();
                 return findPeerToConnect(fileName, actualizedPeers);
@@ -49,8 +49,8 @@ public class Finder {
 
     public void lookForPeerWithFile(Communicator communicator) {
         String fileName = communicator.getFileName();
-        String message = communicator.readAction();
-        if (message.equals("list with already checked peers")) {
+        Message message = communicator.readAction();
+        if (message.equals(Message.PEERS)) {
             Set<Peer> checkedPeersFromAnotherPeer = communicator.readPeers();
             if (checkIfHaveFile(fileName)) {
                 communicator.sendPeer(peer);

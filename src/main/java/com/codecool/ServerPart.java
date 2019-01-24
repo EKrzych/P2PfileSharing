@@ -19,11 +19,11 @@ public class ServerPart implements Runnable {
     public void run() {
         while (true) {
             Communicator communicator = waitToBeginCommunication();
-            String message = communicator.readAction();
+            Message message = communicator.readAction();
 
-            if (message.equals("hello")) {
+            if (message.equals(Message.HELLO)) {
                 welcomeNewPeer(communicator);
-            } else if (message.equals("looking for file")) {
+            } else if (message.equals(Message.FILE)) {
                 findFile(communicator);
             }
             communicator.close();

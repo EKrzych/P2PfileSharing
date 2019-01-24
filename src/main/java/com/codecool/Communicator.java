@@ -58,20 +58,20 @@ public class Communicator {
         }
     }
 
-    public String askForFile(String fileName, Set<Peer> checkedPeers) {
+    public Message askForFile(String fileName, Set<Peer> checkedPeers) {
         if(isCommunicationPossible) {
             try {
-                oOs.writeObject("looking for file");
+                oOs.writeObject(Message.FILE);
                 oOs.writeObject(fileName);
-                oOs.writeObject("list with already checked peers");
+                oOs.writeObject(Message.PEERS);
                 oOs.writeObject(checkedPeers);
-                return (String) oIs.readObject();
+                return (Message) oIs.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
 
-        return "coudnt send peer";//todo
+        return Message.PROBLEM;//todo
     }
 
     public Peer readPeer() {
@@ -85,10 +85,6 @@ public class Communicator {
         return null;
     }
 
-    public Socket getSocket() {
-        return socket;
-    }
-
     public Set<Peer> readPeers() {
         if(isCommunicationPossible) {
             try {
@@ -100,15 +96,15 @@ public class Communicator {
         return new HashSet<>();
     }
 
-    public String readAction() {
+    public Message readAction() {
         if(isCommunicationPossible) {
             try {
-                return (String) oIs.readObject();
+                return (Message) oIs.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
-        return "couldn't get message";
+        return Message.PROBLEM;
     }
 
     public void sendPeers(Set<Peer> friends) {
@@ -129,13 +125,13 @@ public class Communicator {
                 e.printStackTrace();
             }
         }
-        return "couldn't get message";
+        return Message.PROBLEM.getMessage();
     }
 
     public void sendPeer(Peer peer) {
         if(isCommunicationPossible) {
             try {
-                oOs.writeObject("found peer");
+                oOs.writeObject(Message.PEER);
                 oOs.writeObject(peer);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -146,7 +142,7 @@ public class Communicator {
     public void sendAlreadyCheckedPeers(Set<Peer> checkedPeersFromAnotherPeer) {
         if(isCommunicationPossible) {
             try {
-                oOs.writeObject("list with already checked peers");
+                oOs.writeObject(Message.PEERS);
                 oOs.writeObject(checkedPeersFromAnotherPeer);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -158,7 +154,7 @@ public class Communicator {
     public void sayHello(Peer peer) {
         if(isCommunicationPossible) {
             try {
-                oOs.writeObject("hello");
+                oOs.writeObject(Message.HELLO);
                 oOs.writeObject(peer);
             } catch (IOException e) {
                 e.printStackTrace();
