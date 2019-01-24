@@ -1,15 +1,18 @@
 package com.codecool;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;
 
 public class ServerPart implements Runnable {
     private Finder finder;
+    private ServerSocket server;
 
 
-    public ServerPart(Finder finder) {
+    public ServerPart(Finder finder, ServerSocket server) {
         this.finder = finder;
+        this.server = server;
     }
 
     @Override
@@ -18,7 +21,7 @@ public class ServerPart implements Runnable {
             Communicator communicator = waitToBeginCommunication();
             String message = communicator.readAction();
 
-            if (message.equals("newPort")) {
+            if (message.equals("hello")) {
                 welcomeNewPeer(communicator);
             } else if (message.equals("looking for file")) {
                 findFile(communicator);
@@ -28,13 +31,13 @@ public class ServerPart implements Runnable {
     }
 
     private void findFile(Communicator communicator) {
-        finder.lookForPortWithFile(communicator);
+        finder.lookForPeerWithFile(communicator);
     }
 
     private Communicator waitToBeginCommunication() {
         Socket socket = null;
         try {
-            socket = finder.getPeer().getServerSocket().accept();
+            socket = server.accept();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,10 +45,10 @@ public class ServerPart implements Runnable {
     }
 
     private void welcomeNewPeer(Communicator communicator) {
-        Set<Integer> ports = finder.getPeer().getServerPorts();
-        Integer newPort = communicator.readPort();
-        ports.add(newPort);
-        communicator.sendPorts(ports);
+        Set<Peer> friends = finder.getPeer().getFriends();
+        Peer peer = communicator.readPeer();
+        friends.add(peer);
+        communicator.sendPeers(friends);
     }
 
 }

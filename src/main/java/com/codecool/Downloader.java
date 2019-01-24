@@ -8,7 +8,7 @@ public class Downloader {
     }
 
     public void downloadFile(String fileName) {
-        int portWithFile = finder.findPortToConnect(fileName);
+        Peer peerWithFile = finder.findPeerToConnect(fileName);
         //TODO download file
     }
 

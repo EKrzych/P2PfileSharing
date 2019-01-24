@@ -4,137 +4,164 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Communicator {
     private Socket socket;
     private ObjectOutputStream oOs;
     private ObjectInputStream oIs;
+    private boolean isCommunicationPossible;
 
     public Communicator(String hostIP, Integer port) {
-        createStreams(hostIP, port);
+        isCommunicationPossible = createStreams(hostIP, port);
     }
 
     public Communicator(Socket socket) {
         this.socket = socket;
-        createStreams(socket);
+        isCommunicationPossible = createStreams(socket);
+
     }
 
-    private void createStreams(String hostIP, Integer port) {
+    public Communicator(Peer peer) {
+        this(peer.getHostIP(), peer.getPort());
+    }
+
+    private boolean createStreams(String hostIP, Integer port) {
         try {
             this.socket = new Socket(hostIP, port);
-            createStreams(socket);
+            return createStreams(socket);
         } catch (IOException e) {
             System.out.println("There is no such port");
         }
+        return false;
     }
 
-    private void createStreams(Socket socket) {
+    private boolean createStreams(Socket socket) {
         try {
             this.oOs = new ObjectOutputStream(socket.getOutputStream());
             this.oIs = new ObjectInputStream(socket.getInputStream());
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     public void close() {
         try {
-            socket.close();
-            oOs.close();
-            oIs.close();
+            if(socket != null) socket.close();
+            if(oOs != null) oOs.close();
+            if(oIs != null) oIs.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    public String askForFile(String fileName, Set<Integer> checkedPorts) {
-        try {
-            oOs.writeObject("looking for file");
-            oOs.writeObject(fileName);
-            oOs.writeObject("list with already checked ports");
-            oOs.writeObject(checkedPorts);
-            return (String) oIs.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+    public String askForFile(String fileName, Set<Peer> checkedPeers) {
+        if(isCommunicationPossible) {
+            try {
+                oOs.writeObject("looking for file");
+                oOs.writeObject(fileName);
+                oOs.writeObject("list with already checked peers");
+                oOs.writeObject(checkedPeers);
+                return (String) oIs.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         return "couldn't get message"; // TODO handle this message
     }
 
-    public Integer readPort() {
-        try {
-            return (Integer) oIs.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+    public Peer readPeer() {
+        if(isCommunicationPossible) {
+            try {
+                return (Peer) oIs.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
-        return -1;
+        return null;
     }
 
     public Socket getSocket() {
         return socket;
     }
 
-    public Set<Integer> readPorts() {
-        try {
-            return (Set<Integer>) oIs.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+    public Set<Peer> readPeers() {
+        if(isCommunicationPossible) {
+            try {
+                return (Set<Peer>) oIs.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+        return new HashSet<>();
     }
 
     public String readAction() {
-        try {
-            return (String) oIs.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        if(isCommunicationPossible) {
+            try {
+                return (String) oIs.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         return "couldn't get message";
     }
 
-    public void sendPorts(Set<Integer> ports) {
-        try {
-            oOs.writeObject(ports);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void sendPeers(Set<Peer> friends) {
+        if(isCommunicationPossible) {
+            try {
+                oOs.writeObject(friends);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public String getFileName() {
-        try {
-            return (String) oIs.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        if(isCommunicationPossible) {
+            try {
+                return (String) oIs.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         return "couldn't get message";
     }
 
-    public void sendPort(Integer port) {
-        try {
-            oOs.writeObject("found port");
-            oOs.writeObject(port);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void sendPeer(Peer peer) {
+        if(isCommunicationPossible) {
+            try {
+                oOs.writeObject("found peer");
+                oOs.writeObject(peer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    public void sendAlreadyCheckedPorts(Set<Integer> checkedPortsFromAnotherPeer) {
-        try {
-            oOs.writeObject("list with already checked ports");
-            oOs.writeObject(checkedPortsFromAnotherPeer);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void sendAlreadyCheckedPeers(Set<Peer> checkedPeersFromAnotherPeer) {
+        if(isCommunicationPossible) {
+            try {
+                oOs.writeObject("list with already checked peers");
+                oOs.writeObject(checkedPeersFromAnotherPeer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }
 
-    public void sayHello(Integer myPort) {
-        try {
-            oOs.writeObject("newPort");
-            oOs.writeObject(myPort);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void sayHello(Peer peer) {
+        if(isCommunicationPossible) {
+            try {
+                oOs.writeObject("hello");
+                oOs.writeObject(peer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

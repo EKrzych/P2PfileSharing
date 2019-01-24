@@ -1,6 +1,5 @@
 package com.codecool;
 
-import java.io.IOException;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -27,13 +26,13 @@ public class ClientPart implements Runnable {
         String hostIP = askForHostIp();
         Integer portToConnect = askForPort();
         Peer peer = downloader.getFinder().getPeer();
-        peer.getServerPorts().addAll(connectIfPossible(hostIP, portToConnect, peer.getServerSocket().getLocalPort()));
+        peer.getFriends().addAll(connectIfPossible(hostIP, portToConnect, peer));
     }
 
-    private Set<Integer> connectIfPossible(String hostIP, Integer portToConnect, Integer myPort) {
+    private Set<Peer> connectIfPossible(String hostIP, Integer portToConnect, Peer peer) {
         Communicator communicator = new Communicator(hostIP, portToConnect);
-        communicator.sayHello(myPort);
-        return communicator.readPorts();
+        communicator.sayHello(peer);
+        return communicator.readPeers();
     }
 
     private Integer askForPort() {

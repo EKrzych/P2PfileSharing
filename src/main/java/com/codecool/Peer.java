@@ -1,32 +1,34 @@
 package com.codecool;
 
-import java.io.*;
+import java.io.Serializable;
+import java.util.Set;
 
+public class Peer implements Serializable {
 
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.*;
-
-public class Peer {
-
-    private Set<Integer> serverPorts;///TODO change into hashMap!!!
-    private ServerSocket serverSocket;
+    private Set<Peer> friends;
     private String pathToFolder;
+    private Integer port;
+    private String hostIP;
 
-    public Peer(Set<Integer> serverPorts, ServerSocket serverSocket, String pathToFolder) {
-        this.serverPorts = serverPorts;
-
-        this.serverSocket = serverSocket;
+    public Peer(Set<Peer> friends, String pathToFolder, Integer port, String hostIP) {
+        this.friends = friends;
         this.pathToFolder = pathToFolder;
+        this.port = port;
+        this.hostIP = hostIP;
     }
 
-    public Set<Integer> getServerPorts() {
-        return serverPorts;
+    public Integer getPort() {
+        return port;
     }
 
-    public ServerSocket getServerSocket() {
-        return serverSocket;
+    public String getHostIP() {
+        return hostIP;
     }
+
+    public Set<Peer> getFriends() {
+        return friends;
+    }
+
 
     public String getPathToFolder() {
         return pathToFolder;

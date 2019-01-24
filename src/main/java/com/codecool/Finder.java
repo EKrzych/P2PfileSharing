@@ -11,61 +11,59 @@ public class Finder {
         this.peer = peer;
     }
 
-
-
-    int findPortToConnect(String fileName) {
-        return findPortToConnect(fileName, new LinkedHashSet<>());
+    Peer findPeerToConnect(String fileName) {
+        return findPeerToConnect(fileName, new LinkedHashSet<>());
     }
 
 
-    private int findPortToConnect(String fileName, Set<Integer> checkedPorts ) {
-        Iterator<Integer> it = getIteratorWithPortsToCheck(checkedPorts);
+    private Peer findPeerToConnect(String fileName, Set<Peer> checkedPeers ) {
+        Iterator<Peer> it = getIteratorWithPortsToCheck(checkedPeers);
 
         if(it.hasNext()) {
-            Communicator communicator = new Communicator(peer.getHostIP(, it.next());
-            String message = communicator.askForFile(fileName, checkedPorts);
+            Communicator communicator = new Communicator(peer);
+            String message = communicator.askForFile(fileName, checkedPeers);
 
-            if(message.equals("found port")) {
-                Integer foundPort = communicator.readPort();
-                System.out.println("Found port" + foundPort + "I've found it: " + communicator.getSocket().getPort());
+            if(message.equals("found peer")) {
+                Peer foundPeer = communicator.readPeer();
+                System.out.println("Found port" + foundPeer + "I've found it: " + communicator.getSocket().getPort());
                 communicator.close();
-                return foundPort;
-            } else if(message.equals("list with already checked ports")){
-                Set<Integer> actualizedPorts = communicator.readPorts();
+                return foundPeer;
+            } else if(message.equals("list with already checked peers")){
+                Set<Peer> actualizedPeers = communicator.readPeers();
                 communicator.close();
-                return findPortToConnect(fileName, actualizedPorts);
+                return findPeerToConnect(fileName, actualizedPeers);
             }
             communicator.close();
         }
-        return 0;
+        return null;
     }
 
-    private Iterator<Integer> getIteratorWithPortsToCheck(Set<Integer> checkedPorts){
-        Set<Integer> portsToCheck = peer.getServerPorts().stream()
-                .filter(n->!checkedPorts.contains(n))
+    private Iterator<Peer> getIteratorWithPortsToCheck(Set<Peer> checkedPeers){
+        Set<Peer> peersToCheck = peer.getFriends().stream()
+                .filter(n->!checkedPeers.contains(n))
                 .collect(Collectors.toSet());
-        return  portsToCheck.iterator();
+        return  peersToCheck.iterator();
     }
 
-    public void lookForPortWithFile(Communicator communicator) {
+    public void lookForPeerWithFile(Communicator communicator) {
         String fileName = communicator.getFileName();
         String message = communicator.readAction();
-        if (message.equals("list with already checked ports")) {
-            Set<Integer> checkedPortsFromAnotherPeer = communicator.readPorts();
+        if (message.equals("list with already checked peers")) {
+            Set<Peer> checkedPeersFromAnotherPeer = communicator.readPeers();
             if (checkIfHaveFile(fileName)) {
-                communicator.sendPort(peer.getServerSocket().getLocalPort());
+                communicator.sendPeer(peer);
             } else {
-                checkedPortsFromAnotherPeer.add(peer.getServerSocket().getLocalPort());
-                int portToConnect = findPortToConnect(fileName, checkedPortsFromAnotherPeer);
+                checkedPeersFromAnotherPeer.add(peer);
+                Peer peerToConnect = findPeerToConnect(fileName, checkedPeersFromAnotherPeer);
 
-                if (portToConnect > 0) {
-                    System.out.println("Found port - before writing to outputstream: " + portToConnect);
-                    communicator.sendPort(portToConnect);
+                if (peerToConnect != null) {
+                    System.out.println("Found peer - before writing to outputstream: " + peerToConnect);
+                    communicator.sendPeer(peerToConnect);
 
                 } else {
                     System.out.println("list with already checked ports - before writting into outputstream: ");
-                    checkedPortsFromAnotherPeer.forEach(n -> System.out.println(n));
-                    communicator.sendAlreadyCheckedPorts(checkedPortsFromAnotherPeer);
+                    checkedPeersFromAnotherPeer.forEach(n -> System.out.println(n));
+                    communicator.sendAlreadyCheckedPeers(checkedPeersFromAnotherPeer);
                 }
             }
         }
