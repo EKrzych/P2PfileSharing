@@ -1,5 +1,6 @@
 package com.codecool;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -156,6 +157,29 @@ public class Communicator {
             try {
                 oOs.writeObject(Message.HELLO);
                 oOs.writeObject(peer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public File getFile(String fileName) {
+        if(isCommunicationPossible) {
+            try {
+                oOs.writeObject(Message.SEND);
+                oOs.writeObject(fileName);
+                return (File) oIs.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public void sendFile(File file) {
+        if(isCommunicationPossible) {
+            try {
+                oOs.writeObject(file);
             } catch (IOException e) {
                 e.printStackTrace();
             }

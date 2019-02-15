@@ -1,5 +1,7 @@
 package com.codecool;
 
+import java.io.File;
+
 public class Downloader {
     private Finder finder;
 
@@ -12,7 +14,13 @@ public class Downloader {
         if(peerWithFile != null) {
             System.out.println("I found file in peer with port: " + peerWithFile.getPort());
         }
-        //TODO download file
+        File file = new Communicator(peerWithFile).getFile(fileName);
+
+        unpackFile(file);
+    }
+
+    private void unpackFile(File file) {
+        //TODO how pack/unpack files in java!
     }
 
     public Finder getFinder() {

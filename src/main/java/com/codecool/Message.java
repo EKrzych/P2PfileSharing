@@ -5,6 +5,7 @@ public enum Message {
     PEER("found peer"),
     FILE("looking for file"),
     PEERS("list with already checked peers"),
+    SEND("send me file"),
     PROBLEM("couldn't do operation");
 
     private String message;
